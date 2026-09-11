@@ -291,6 +291,8 @@ Alternate light/dark rhythm: add `.sd-alt` to any section container.
 
 Source templates intentionally keep `{{...}}` fields. Run `python3 scripts/build.py --check-placeholders path/to/filled.html` on completed documents. Run `python3 scripts/build.py --check-density` to warn on pages with >25% trailing whitespace (skips cover).
 
+**One thing no check catches.** Contents page numbers: a `display: flex` anchor on `.toc-title` silently prints `0` for every entry, and `--check-visual` and `--check-density` both still pass — read the rendered contents page back and confirm the numbers are real (production.md #24).
+
 For new documents built from raw material, validate the content IR before layout and re-check coverage after filling: `python3 scripts/build.py --check-content content.json [filled.html]` (schemas in `references/schemas/`). Before shipping a filled PDF, run `python3 scripts/build.py --check-visual path/to/filled.pdf` and view every exported page image against the printed checklist.
 
 **Strict mathematics**: author formulas only as standard LaTeX `\( inline \)` or `\[ display \]`. Before delivery run `bash scripts/ensure_mathjax.sh`, `python3 scripts/math_render.py --in-place filled.html`, then `python3 scripts/math_render.py --check filled.html`. The accepted HTML/PDF result is MathJax SVG, never Unicode pseudo-formulas, raw TeX, or formula screenshots.

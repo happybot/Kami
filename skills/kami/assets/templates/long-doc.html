@@ -164,20 +164,22 @@
     font-weight: 500;
     min-width: 30pt;
   }
+  /* The anchor must not be a flex container: WeasyPrint resolves
+     target-counter(attr(href), page) to 0 inside one, so every contents
+     page number prints as 0. Keep the row flex on .toc-item and float the
+     number instead. See production.md pitfall 24. */
   .toc-title {
     flex: 1;
     color: var(--near-black);
     padding-left: 6pt;
     text-decoration: none;
-    display: flex;
-    justify-content: space-between;
-    gap: 12pt;
+    display: block;
   }
   .toc-title[href]::after {
     content: target-counter(attr(href), page);
     color: var(--stone);
     font-variant-numeric: tabular-nums;
-    margin-left: auto;
+    float: right;
   }
 
   /* ========== HEADINGS ========== */

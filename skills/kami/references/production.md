@@ -786,6 +786,8 @@ Chevron templates (tip at endpoint, 8px arm length):
 | up | `M (x-8) (y+8) L x y L (x+8) (y+8)` |
 | right | `M (x-8) (y-8) L x y L (x-8) (y+8)` |
 
+**Scope note (verified on WeasyPrint 70.0)**: the failure is tied to curved geometry, not to markers in general. A straight `<line>` carrying an `orient="auto"` marker orients correctly — a vertical axis arrow points up, a downward flow arrow points down. Before rewriting a working straight-line arrow into a manual chevron, render the page and look at it; the rewrite is only required for `<path>` arrows whose tangent varies.
+
 ### 15. (P1) Slide letter-spacing must be halved
 
 **Symptom**: Slide text looks "scattered" or over-spaced when print letter-spacing values (e.g. `letter-spacing: 8px`) are used directly.
@@ -935,6 +937,43 @@ not generated from `assets/diagrams/*.html`.
 **Done when**: every visual change to a diagram template is also present in the
 matching mini SVG in `index.html`, `index-zh.html`, `index-ja.html`, `index-ko.html`,
 and `index-tw.html`.
+
+### 24. (P0) Every contents page number prints as `0`
+
+**Symptom**: the contents page of a `long-doc` shows `0` for every entry instead of the real page number. The rest of the document is unaffected.
+
+**Root cause**: `.toc-title` — the `<a>` that carries the `href` — declares `display: flex`. WeasyPrint resolves `target-counter(attr(href), page)` inside a flex container to `0`; the anchor's URL never reaches the counter lookup. This is a template bug, not a document bug: the stock `long-doc.html` reproduces it unmodified on WeasyPrint 70.0. Both `attr(href)` and `attr(href url)` fail, so the flex container is the trigger, not the attribute type.
+
+**Fix**: keep the row flex on `.toc-item`, make the anchor a block, and float the number to the right edge.
+
+```css
+/* Bad: every contents page number prints as 0 */
+.toc-title {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 12pt;
+}
+.toc-title[href]::after {
+  content: target-counter(attr(href), page);
+  margin-left: auto;
+}
+
+/* Good: block anchor + right float */
+.toc-title {
+  flex: 1;
+  display: block;
+  padding-left: 6pt;
+}
+.toc-title[href]::after {
+  content: target-counter(attr(href), page);
+  float: right;
+}
+```
+
+**Scope**: `long-doc.html`, `long-doc-en.html`, `long-doc-ko.html`. No other template has a contents page.
+
+**Check**: after rendering, read the contents page back with `pypdf` `extract_text()`. A run of `0`s means the fix did not take; real page numbers mean it did. `--check-visual` and `--check-density` both pass on a document with this bug, so neither catches it.
 
 ---
 
